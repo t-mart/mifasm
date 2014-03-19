@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-from .assembler import Assembler
+from .value import Value
 
 def run():
     parser = argparse.ArgumentParser(description='Assemble cs3220 assembly into a quartus mif.')
@@ -14,7 +14,7 @@ def run():
             help='path to output (changes extension of input to .mif by default)')
     group.add_argument('--stdout', action='store_true', help="output to stdout")
 
-    radixes = Assembler.radix_names
+    radixes = Value.radix_names
     parser.add_argument('--addr-radix', choices=radixes, default='hex',
             help='radix of addresses in output')
     parser.add_argument('--data-radix', choices=radixes, default='hex',
