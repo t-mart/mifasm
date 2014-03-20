@@ -12,6 +12,6 @@ Name                   Prefix         Min                      Max              
 Unsigned               None           0                        (2^width)-1            0, 1, 123
 Negative(Signed)       \-             -(2^(width-1))           -1                     -1, -123
 Binary                 0b             0                        (2^width)-1            0b10100011, 0b0
-Octal                  0              0                        (2^width)-1            0277, 00
+Octal                  0o             0                        (2^width)-1            0o277, 0o0
 Hexadecimal            0x             0                        (2^width)-1            0x0, 0xFF
 ====================== ============== ======================== ====================== ================
