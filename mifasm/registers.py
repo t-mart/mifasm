@@ -1,9 +1,12 @@
 import sys
 
+from .util import BitsT
+from bitstring import Bits
+
 class Register(object):
     def __init__(self, name, regno):
         self.name = name
-        self.regno = regno
+        self.bits = Bits(uint=regno, length=4)
 
 __reg_dict = {
     'R0': 0,

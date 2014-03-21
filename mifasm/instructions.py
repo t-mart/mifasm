@@ -2,6 +2,7 @@ import sys
 from bitstring import Bits
 
 from .registers import *
+from .util import BitsT
 
 # this some hacky shit right here, but it really reduces code size
 # if you understand how the following works, you understand dynamic python
@@ -69,24 +70,10 @@ __op1_list = [
         __OP1('CMPI', '1010', __CMP_CMPI_BCOND_OP2),
         __OP1('JAL', '1011', None)]
 
-class Instruction(object):
-    def __init__(self, bits):
-        # this won't be executed, but is here for completeness
-        self.bits = bits
 
-    def code(self, radix='hex'):
-        if radix in ['hex', 'bin', 'oct', 'int', 'uint']:
-            # NOTE: you can only make an umabiguous oct representation if the
-            # width of the value is a multiple of 3, and mifasm defaults to
-            # 32b which is not a multiple of 3. therefore, we append another
-            # zeroed bit to make it 33. this technically isn't the same as the
-            # 32b representation. also, we need to test if quartus freaks when
-            # it sees width not a multiple of 3, yet oct output is chosen
-            if radix == 'oct':
-                return ([0] + self.bits).oct
-            return getattr(self.bits, radix)
-        else:
-            raise ValueError("radix {radix} is not supported".format(radix=radix))
+class Instruction(BitsT):
+    def __init__(self, *args, **kwargs):
+        super(Instruction, self).__init__(*args, **kwargs)
 
 def __type_1_init(op1, op2):
     # Format used when OP1 is ALUR or CMPR
@@ -94,16 +81,18 @@ def __type_1_init(op1, op2):
     # 4-7: rd,
     # 8-11: rs,
     # 12-15: rt,
-    # 16-27: 0,
+    # 16-27: 0(blank),
     # 28-31: op2 ]
     def init(self, rd, rs, rt):
-        self._op1 = Bits("bin:4=%s" % (op1))
-        self._op2 = Bits("bin:4=%s" % (op2))
-        self._rd = Bits("uint:4=%s" % (rd.regno))
-        self._rs = Bits("uint:4=%s" % (rs.regno))
-        self._rt = Bits("uint:4=%s" % (rt.regno))
-        self.bits = self._op1 + self._rd + self._rs + self._rt + \
-                Bits('int:12=0') + self._op2
+        self._op1 = Bits(bin=op1)
+        self._op2 = Bits(bin=op2)
+        self._rd = rd.bits
+        self._rs = rs.bits
+        self._rt = rt.bits
+        blank = Bits(int=0, length=12)
+        self.bits = Bits(
+                self._op1 + self._rd + self._rs + self._rt + \
+                blank + self._op2)
     return init
 
 def __type_2_init(op1, op2):
@@ -114,14 +103,14 @@ def __type_2_init(op1, op2):
     # 12-15: rt,
     # 16-31: imm ]
     def init(self, rs, rt, imm):
-        self._op1 = Bits("bin:4=%s" % (op1))
-        self._op2 = Bits("bin:4=%s" % (op2))
-        self._rd = Bits("uint:4=%s" % (rd.regno))
-        self._rs = Bits("uint:4=%s" % (rs.regno))
-        self._rt = Bits("uint:4=%s" % (rt.regno))
-        self._imm = Bits("int:16=%s" % (imm))
-        self.bits = self._op1 + self._op2 + self._rs + self._rt + \
-               self._imm
+        self._op1 = Bits(bin=op1)
+        self._op2 = Bits(bin=op2)
+        self._rs = rs.bits
+        self._rt = rt.bits
+        self._imm = imm
+        self.bits = Bits(
+                self._op1 + self._op2 + self._rs + self._rt + \
+                self._imm)
     return init
 
 def __type_3_init(op1, op2):
@@ -132,13 +121,14 @@ def __type_3_init(op1, op2):
     # 12-15: op2,
     # 16-31: imm ]
     def init(self, rd, rs, imm):
-        self._op1 = Bits("bin:4=%s" % (op1))
-        self._op2 = Bits("bin:4=%s" % (op2))
-        self._rd = Bits("uint:4=%s" % (rd.regno))
-        self._rs = Bits("uint:4=%s" % (rs.regno))
-        self._imm = Bits("int:16=%s" % (imm))
-        self.bits = self._op1 + self._rd + self._rs + self._op2 + \
-               self._imm
+        self._op1 = Bits(bin=op1)
+        self._op2 = Bits(bin=op2)
+        self._rd = rd.bits
+        self._rs = rs.bits
+        self._imm = imm
+        self.bits = Bits(
+                self._op1 + self._rd + self._rs + self._op2 + \
+                self._imm)
     return init
 
 INSTRUCTIONS = {}
@@ -169,7 +159,7 @@ for op1 in __op1_list:
             setattr(sys.modules[__name__], instr_name, instr_cls)
             INSTRUCTIONS[instr_name] = instr_cls
     else:
-        # JAL breaks the convention by not having an OP2, so we do it
+        # JAL breaks the convention by not having an OP2, so we build it
         # specially here
         instr_name = 'JAL'
         instr_type = 3
@@ -192,10 +182,11 @@ class CALL(JAL):
         super(CALL, self).__init__(rd=RA, rs=rs, imm=imm)
 INSTRUCTIONS['CALL'] = CALL
 
+zero = Bits(int=0, length=16)
 
 class RET(JAL):
     def __init__(self):
-        super(RET, self).__init__(rd=R9, rs=RA, imm=0)
+        super(RET, self).__init__(rd=R9, rs=RA, imm=zero)
 INSTRUCTIONS['RET'] = RET
 
 
