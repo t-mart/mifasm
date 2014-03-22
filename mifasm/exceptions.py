@@ -38,6 +38,5 @@ class BadValueError(AssemblySourceError, ValueError):
     def __str__(self):
         return "'%s' isn't a valid value" % (self.v)
 
-
-class BadAddressRadixError(MifasmError):
+class FullTargetException(MifasmError):
     pass

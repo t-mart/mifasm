@@ -3,10 +3,13 @@ import sys
 from .util import BitsT
 from bitstring import Bits
 
-class Register(object):
+class Register(BitsT):
     def __init__(self, name, regno):
         self.name = name
         self.bits = Bits(uint=regno, length=4)
+
+    def __str__(self):
+        return self.name
 
 __reg_dict = {
     'R0': 0,
@@ -47,3 +50,6 @@ for reg_name, reg_no in __reg_dict.iteritems():
     obj = Register(reg_name, reg_no)
     setattr(sys.modules[__name__], reg_name, obj)
     REGISTERS[reg_name] = obj
+
+__all__ = ['REGISTERS', 'Register']
+__all__.extend([cls_name for cls_name in REGISTERS.keys()])
