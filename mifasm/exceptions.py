@@ -38,5 +38,9 @@ class BadValueError(AssemblySourceError, ValueError):
     def __str__(self):
         return "'%s' isn't a valid value" % (self.v)
 
+
 class FullTargetException(MifasmError):
+    pass
+
+class OverwriteWarning(RuntimeWarning):
     pass

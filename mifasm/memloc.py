@@ -1,6 +1,4 @@
-from bitstring import Bits
-
-from .util import Address
+from . import MBitArray
 
 class MemLoc(object):
     def __init__(self, data, length=1, comment=""):

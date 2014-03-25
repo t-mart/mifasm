@@ -1,12 +1,11 @@
 import sys
 
-from .util import BitsT
-from bitstring import Bits
+from . import MBitArray
 
-class Register(BitsT):
+class Register(MBitArray):
     def __init__(self, name, regno):
+        super(Register, self).__init__(uint=regno, length=4)
         self.name = name
-        self.bits = Bits(uint=regno, length=4)
 
     def __str__(self):
         return self.name
